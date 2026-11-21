@@ -120,6 +120,9 @@ O proxy (`src/proxy.ts`) bloqueia `/admin/**`; o layout protegido reforça a che
 
 # Deploy em servidor Ubuntu (Docker)
 
+Runbook detalhado (instalação, atualização, backup, rollback e troubleshooting):
+**[DEPLOY.md](./DEPLOY.md)**.
+
 Guia para rodar em um **Ubuntu Server** local (LAN ou VPS), com persistência de banco e uploads.
 
 ## 1. Instalar Docker

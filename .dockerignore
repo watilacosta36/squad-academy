@@ -1,0 +1,23 @@
+node_modules
+.next
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+npm-debug.log*
+*.tsbuildinfo
+
+# segredos (o container recebe as variáveis via env_file no compose)
+.env
+.env.*
+!.env.example
+
+# dados locais não devem entrar na imagem
+prisma/data
+prisma/dev.db*
+public/uploads
+
+# documentação e artefatos locais
+README.md
+AGENTS.md
+src/generated

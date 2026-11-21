@@ -1,0 +1,62 @@
+name: squad-academy
+
+services:
+  web:
+    build:
+      context: .
+      target: runner
+    image: squad-academy:latest
+    container_name: squad-academy
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+    volumes:
+      # Persistência entre rebuilds (banco e arquivos enviados).
+      - sqlite_data:/app/prisma/data
+      - uploads:/app/public/uploads
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # Serviço de manutenção (não sobe com `up`, use com --profile tools).
+  # Exemplos:
+  #   docker compose -f docker-compose.prod.yml --profile tools run --rm migrate
+  #   docker compose -f docker-compose.prod.yml --profile tools run --rm migrate npx prisma db seed
+  migrate:
+    build:
+      context: .
+      target: builder
+    image: squad-academy-tools:latest
+    profiles: ["tools"]
+    env_file:
+      - .env.production
+    working_dir: /app
+    volumes:
+      - sqlite_data:/app/prisma/data
+    # O `web` roda como uid 1001 (nextjs); garantimos que o arquivo criado
+    # pelo `db push` pertença ao mesmo usuário.
+    command:
+      [
+        "sh",
+        "-c",
+        "npx prisma db push && chown -R 1001:1001 /app/prisma/data",
+      ]
+
+volumes:
+  sqlite_data:
+  uploads:

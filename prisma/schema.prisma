@@ -1,0 +1,69 @@
+// Squad Academy — schema do banco (SQLite local / Turso)
+// Prisma 7: client gerado como TypeScript em `src/generated/prisma`.
+// A URL de conexão fica em `prisma.config.ts` (CLI) e em `src/lib/db.ts` (runtime).
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  runtime             = "nodejs"
+  moduleFormat        = "esm"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  articles Article[]
+  manuals  Manual[]
+}
+
+model Article {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  excerpt     String
+  content     String
+  // RECRUTA | VETERANO | COMANDANTE (validado em src/lib/validation.ts)
+  level       String    @default("RECRUTA")
+  gameVersion String
+  // DRAFT | PUBLISHED
+  status      String    @default("DRAFT")
+  categoryId  String
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([status, publishedAt])
+  @@index([categoryId])
+}
+
+model Manual {
+  id             String   @id @default(cuid())
+  title          String
+  slug           String   @unique
+  description    String
+  gameVersion    String
+  pdfUrl         String
+  coverUrl       String?
+  downloadsCount Int      @default(0)
+  // DRAFT | PUBLISHED
+  status         String   @default("DRAFT")
+  categoryId     String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([status, downloadsCount])
+  @@index([categoryId])
+}

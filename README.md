@@ -68,6 +68,7 @@ Definidas no `.env`:
 | `ADMIN_PASSWORD` | sim* | Senha em texto puro (dev) |
 | `ADMIN_PASSWORD_HASH` | sim* | Hash bcrypt (tem prioridade sobre a senha) |
 | `SESSION_SECRET` | sim | Segredo do cookie de sessão (≥ 16 caracteres) |
+| `COOKIE_SECURE` | não | `true`/`false` para forçar o atributo Secure do cookie; vazio detecta por `x-forwarded-proto`/`NEXT_PUBLIC_SITE_URL` |
 | `NEXT_PUBLIC_SITE_URL` | sim | URL pública do site (usada em metadata/sitemap) |
 
 \* informe ao menos uma das duas formas de senha.

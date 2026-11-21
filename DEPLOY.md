@@ -379,6 +379,7 @@ docker builder prune -f --filter until=168h
 | Nginx 502 | Container parado ou porta errada; veja `docker compose ... logs web` |
 | Nginx 413 ao enviar PDF | Aumente `client_max_body_size` (≥ 25m) e recarregue o Nginx |
 | Login sempre inválido | Confira `ADMIN_EMAIL`/`ADMIN_PASSWORD(_HASH)` e recrie o container (`up -d --force-recreate`) |
+| Loga e volta para o login ao navegar | Acesso por **HTTP** com cookie `Secure`. Deixe `NEXT_PUBLIC_SITE_URL` com `http://…` (ou `COOKIE_SECURE=false`) em HTTP na LAN; em HTTPS/proxy o cookie volta a ser `Secure` |
 | Sessão cai após reiniciar | `SESSION_SECRET` vazio ou alterado |
 | `next start` avisa sobre `standalone` | Esperado; em produção use o container (`node server.js`) |
 | PDFs de exemplo retornam 404 | Normal: envie um manual real no `/admin/manuais/novo` |

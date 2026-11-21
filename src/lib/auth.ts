@@ -1,10 +1,16 @@
 import { timingSafeEqual } from "node:crypto";
 
 import { compare } from "bcryptjs";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS, signSessionToken, verifySessionToken, type AdminSession } from "./session";
+import {
+  SESSION_COOKIE,
+  SESSION_MAX_AGE_SECONDS,
+  signSessionToken,
+  verifySessionToken,
+  type AdminSession,
+} from "./session";
 
 function safeEqual(a: string, b: string): boolean {
   const bufferA = Buffer.from(a);
@@ -56,13 +62,59 @@ export async function verifyCredentials(
   return safeEqual(password, adminPassword);
 }
 
+/**
+ * O atributo `Secure` só pode ser usado quando a página é servida por HTTPS.
+ * Em produção acessada por HTTP (ex.: `http://192.168.0.10:3000` na LAN), o
+ * navegador descarta o cookie e a sessão se perde a cada navegação.
+ *
+ * Ordem de decisão:
+ * 1. `COOKIE_SECURE` (override explícito: "true" | "false");
+ * 2. `x-forwarded-proto` (quando há proxy reverso/Nginx);
+ * 3. protocolo de `NEXT_PUBLIC_SITE_URL`;
+ * 4. fallback para o comportamento antigo (Secure em produção).
+ */
+async function shouldUseSecureCookie(): Promise<boolean> {
+  const override = process.env.COOKIE_SECURE?.toLowerCase();
+
+  if (override === "true") {
+    return true;
+  }
+
+  if (override === "false") {
+    return false;
+  }
+
+  try {
+    const headerList = await headers();
+    const forwardedProto = headerList
+      .get("x-forwarded-proto")
+      ?.split(",")[0]
+      ?.trim()
+      .toLowerCase();
+
+    if (forwardedProto) {
+      return forwardedProto === "https";
+    }
+  } catch {
+    // Sem contexto de request (ex.: testes): segue para o fallback.
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  if (siteUrl) {
+    return siteUrl.startsWith("https://");
+  }
+
+  return process.env.NODE_ENV === "production";
+}
+
 export async function createAdminSession(email: string): Promise<void> {
   const cookieStore = await cookies();
 
   cookieStore.set(SESSION_COOKIE, await signSessionToken(email), {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: await shouldUseSecureCookie(),
     path: "/",
     maxAge: SESSION_MAX_AGE_SECONDS,
   });
